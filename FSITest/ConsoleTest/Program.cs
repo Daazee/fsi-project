@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -18,8 +19,8 @@ namespace ConsoleTest
         private static AesManaged CreateAes()
         {
             var aes = new AesManaged();
-           // aes.Mode = CipherMode.CBC;
-           // aes.Padding = PaddingMode.PKCS7;
+            // aes.Mode = CipherMode.CBC;
+            // aes.Padding = PaddingMode.PKCS7;
             aes.Key = System.Text.Encoding.UTF8.GetBytes(key); //UTF8-Encoding
             aes.IV = System.Text.Encoding.UTF8.GetBytes(initVector);//UT8-Encoding
             return aes;
@@ -91,34 +92,43 @@ namespace ConsoleTest
                 // Get the integral value of the character.
                 int value = Convert.ToInt32(letter);
                 // Convert the integer value to a hexadecimal value in string form.
-                sb.Append($"{value:X}");             
+                sb.Append($"{value:X}");
             }
             return sb.ToString();
         }
-       
+
         static async Task Main(string[] args)
-        {           
+        {
+            //await Reset();
+            await SendAirtme();
             string signatureMethodHeader = "SHA256";
-            string password = "Oyinromola2405";
-            string username = "11111";
+            string password = "";
+            string username = "";
             string date = DateTime.Now.ToString("yyyyMMdd");
             string signatureString = username + date + password;
             string signatureHeader = ComputeSha256Hash(signatureString);
             string authString = username + ":" + password;
             string authHeader = Base64Encoded(authString);
             string contentType = "application/json";
+            string orgCode = username;
+            string organizationCodeEncoded = Base64Encoded(orgCode);
 
 
             using (var client = new HttpClient())
             {
                 client.BaseAddress = new Uri("https://sandboxapi.fsi.ng/nibss/bvnr");
                 client.DefaultRequestHeaders.Accept.Clear();
-                client.DefaultRequestHeaders.Add("OrganisationCode", "MTExMTE=");
-                client.DefaultRequestHeaders.Add("Sandbox-Key", "a4c3ed6df1e9ad30d55de6ec33b60295");
+                client.DefaultRequestHeaders.Add("OrganisationCode", organizationCodeEncoded);
+                client.DefaultRequestHeaders.Add("Sandbox-Key", "6fee89c336c046c4f0473d004906e3a7");
                 client.DefaultRequestHeaders.Add("Authorization", authHeader);
                 client.DefaultRequestHeaders.Add("SIGNATURE", signatureHeader);
                 client.DefaultRequestHeaders.Add("SIGNATURE_METH", signatureMethodHeader);
-                client.DefaultRequestHeaders.Add("Content-Type", contentType);
+                //client.DefaultRequestHeaders.Add("Content-Type", contentType);
+
+                client.DefaultRequestHeaders
+                    .Accept
+                    .Add(new MediaTypeWithQualityHeaderValue("application/json"));//ACCEPT header
+
                 client.DefaultRequestHeaders.Add("Accept", contentType);
 
                 var bvn = new BVNModel();
@@ -128,7 +138,7 @@ namespace ConsoleTest
                 var toHexa = ToHexadecimal(aesEncrypted);
                 var data = new StringContent(toHexa);
 
-                HttpResponseMessage response = await client.PostAsync("/VerifySingleBVN", data);
+                HttpResponseMessage response = await client.PostAsync("https://sandboxapi.fsi.ng/nibss/bvnr/VerifySingleBVN", data);
 
                 string result = response.Content.ReadAsStringAsync().Result;
             }
@@ -142,5 +152,82 @@ namespace ConsoleTest
             //Console.WriteLine(decryptedString);
             Console.ReadKey();
         }
+
+      
+        public static async Task<AirtimeResponseModel> SendAirtme()
+        {
+            AirtimeResponseModel responseModel = new AirtimeResponseModel();
+            string baseUrl = "https://sandboxapi.fsi.ng";
+            string sendAirtime = "/atlabs/airtime/send";
+            string url = baseUrl + sendAirtime;
+           
+            string contentType = "application/json";
+            
+            using (var client = new HttpClient())
+            {
+                //client.BaseAddress = new Uri("https://sandboxapi.fsi.ng/nibss/bvnr");
+                client.DefaultRequestHeaders.Accept.Clear();
+                client.DefaultRequestHeaders.Add("Sandbox-Key", "6fee89c336c046c4f0473d004906e3a7");
+
+                client.DefaultRequestHeaders
+                    .Accept
+                    .Add(new MediaTypeWithQualityHeaderValue("application/json"));//ACCEPT header
+
+                client.DefaultRequestHeaders.Add("Accept", contentType);
+
+                var requestObject = new AirtimeRequestModel();
+
+                var recipient = new AirtimeRecipient();
+                var recipients = new List<AirtimeRecipient>();
+                recipient.amount = "100";
+                recipient.currencyCode = "NGN";
+                recipient.phoneNumber = "+2347036135901";
+
+                requestObject.recipients = new List<AirtimeRecipient>();
+
+                requestObject.recipients.Add(recipient);
+                var data = new StringContent(JsonConvert.SerializeObject(requestObject));
+                var response = await client.PostAsync(url, data);
+
+                string result = response.Content.ReadAsStringAsync().Result;
+
+                responseModel = JsonConvert.DeserializeObject<AirtimeResponseModel>(result);
+
+                return responseModel;
+            }
+
+        }
     }
+
+    public class AirtimeRecipient
+    {
+        public string phoneNumber { get; set; }
+        public string amount { get; set; }
+        public string currencyCode { get; set; }
+    }
+
+    public class AirtimeRequestModel
+    {
+        public List<AirtimeRecipient> recipients { get; set; }
+    }
+
+    public class AirtimeResponse
+    {
+        public string phoneNumber { get; set; }
+        public string errorMessage { get; set; }
+        public string amount { get; set; }
+        public string status { get; set; }
+        public string requestId { get; set; }
+        public string discount { get; set; }
+    }
+
+    public class AirtimeResponseModel
+    {
+        public string errorMessage { get; set; }
+        public int numSent { get; set; }
+        public string totalAmount { get; set; }
+        public string totalDiscount { get; set; }
+        public List<AirtimeResponse> responses { get; set; }
+    }
+
 }

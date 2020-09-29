@@ -141,6 +141,7 @@
     <Compile Include="App_Start\SwaggerConfig.cs" />
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="BLL\ApiCalls.cs" />
+    <Compile Include="Controllers\AirtimeController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\SandBoxController.cs" />
     <Compile Include="Controllers\TestController.cs" />
@@ -148,7 +149,9 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Models\BVNModel.cs" />
+    <Compile Include="Models\RequestModel\AirtimeRequestModel.cs" />
     <Compile Include="Models\RequestModel\SmsRequest.cs" />
+    <Compile Include="Models\ResponseModel\AirtimeResponseModel.cs" />
     <Compile Include="Models\ResponseModel\GenericApiResponse.cs" />
     <Compile Include="Models\ResponseModel\SmsResponse.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -190,6 +193,7 @@
     <Content Include="Views\Home\About.cshtml" />
     <Content Include="Views\Home\Contact.cshtml" />
     <Content Include="Views\Home\Index.cshtml" />
+    <Content Include="Views\Airtime\SendAirtime.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
