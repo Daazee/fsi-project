@@ -3,3 +3,8 @@
 ################################################################################
 
 /FSITest/ConsoleTest/bin/Debug
+/FSITest/FSITest/bin
+/FSITest/ConsoleTest/obj
+/FSITest/FSITest/obj/Debug
+/FSITest/.vs/FSITest
+/FSITest/FSITest/obj/Release
