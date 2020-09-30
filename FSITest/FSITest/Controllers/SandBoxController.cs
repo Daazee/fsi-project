@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Threading.Tasks;
 using System.Web.Http;
 
 namespace FSITest.Controllers
@@ -15,13 +16,13 @@ namespace FSITest.Controllers
 
         [ActionName("SendSmsMessage")]
         [HttpPost]
-        public HttpResponseMessage SendSmsMessage([FromBody] SmsRequest request)
+        public async Task<HttpResponseMessage> SendSmsMessage([FromBody] SmsRequest request)
         {
             GenericApiResponse<bool> rsp = new GenericApiResponse<bool>();
             try
             {
                 ApiCalls api = new ApiCalls();
-                bool ApiResp = api.SendSms(request);
+                bool ApiResp = await api.SendSms(request);
                 rsp.data = ApiResp;
                 rsp.message = "Successful";
                 rsp.response = "00";
